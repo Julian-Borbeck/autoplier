@@ -1,0 +1,12 @@
+# application requirements
+
+
+#streamlit
+#metaspace2020
+#watchdog
+#scikit-image
+#sklearn
+#scipy
+#matplotlib
+#tableone
+#pandas

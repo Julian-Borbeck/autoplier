@@ -1,0 +1,99 @@
+---
+title: "Retrieve Ion - Pathway Information from HMDB"
+author: "Daniel Montemayor<br><small>Center for Renal Precision Medicine<br>University of Texas Health San Antonio School of Medicine</small>"
+date: "<small>`r Sys.Date()`</small>"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    number_sections: true
+    toc_float: 
+      collapsed: false
+    code_folding: hide
+    theme: cerulean
+description: "Creates ion to pathway map."
+params:
+  resultsdir: "../../results/"
+---
+
+![Center for Renal Precision Medicine](https://dmontemayor.github.io/assets/Long_SOM/horizontal/JPG/UTHSA_Long-SOM_H_CMYK.jpg)
+
+
+```{r echo = FALSE, message = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+library(BiocManager)
+#BiocManager::install("hmdbQuery")
+library(hmdbQuery)
+```
+
+```{r, include=FALSE}
+# Download metabolite names
+df <- read.csv("refmet_results.txt", sep = "\t", comment.char = "#")
+```
+
+```{r, warning=FALSE, message=FALSE, include=FALSE}
+#function to add pathways
+addpathways <- function(df){
+
+  #init pathway list
+  #pathwaylist <- c()
+
+  #loop over metabolites
+  for (i in 1:nrow(df)){
+    print(df$Standardized.name[i])
+
+    #look up id in HMDB
+    entry <- NA
+    entry <- tryCatch(HmdbEntry(prefix = "http://www.hmdb.ca/metabolites/", id = df$hmdb[i]),
+                      error = function(e) {print(paste('error:', e))})
+    #get associated pathways if found 
+    if (class(entry)[1]=="HmdbEntry") {
+          pwys <- store(entry)$biological_properties$pathways
+          if(class(pwys)=="matrix"){
+            #print(pwys[1,])
+            #loop over pathways
+            for (pwy in pwys[1,]){
+              #check if pathway is new
+              if (!pwy%in%names(df)){
+                #add new pathways to df
+                df[, pwy] <- 0
+                #add new pathways to pathwaylist
+                #pathwaylist <- c(pathwaylist, pwy)
+              }
+              #assign pathway to metbolite
+              df[i, pwy] <- 1
+            }
+          }
+    }
+    
+  }
+  return(df)  
+}
+```
+
+```{r, include=FALSE}
+#add pathways
+df <- addpathways(df)
+```
+
+```{r, include=FALSE}
+#add metabolite classes
+classes <- unique(c(df$Super.class, df$Main.class, df$Sub.class))
+df[, classes] <- 0
+  #loop over metabolites
+  for (i in 1:nrow(df)){
+    print(df$Standardized.name[i])
+    #assign superclass
+    df[i, df$Super.class[i]] <- 1
+    #assign class
+    df[i, df$Main.class[i]] <- 1
+    #assign subclass
+    df[i, df$Sub.class[i]] <- 1
+  }
+```
+
+```{r}
+#write df
+write.csv(df, "membership.csv", row.names = FALSE)
+```
