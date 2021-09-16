@@ -3,3 +3,6 @@ venv.nosync
 .pytest_cache
 __pycache__
 data
+.Rhistory
+*.h5
+logs

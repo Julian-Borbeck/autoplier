@@ -1,12 +1,13 @@
 # application requirements
+tensorflow
+keras
+sklearn
+pandas
+scipy
+matplotlib
 
-
+#tableone
 #streamlit
 #metaspace2020
 #watchdog
 #scikit-image
-#sklearn
-#scipy
-#matplotlib
-#tableone
-#pandas

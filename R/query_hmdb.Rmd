@@ -95,5 +95,5 @@ df[, classes] <- 0
 
 ```{r}
 #write df
-write.csv(df, "membership.csv", row.names = FALSE)
+write.csv(df, "../data/membership.csv", row.names = FALSE)
 ```

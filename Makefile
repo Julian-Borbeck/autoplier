@@ -6,7 +6,7 @@ venv.nosync/bin/activate: requirements.txt
 	touch venv.nosync/bin/activate
 
 test: venv.nosync
-	. venv.nosync/bin/activate; pylint src ; pytest tests
+	. venv.nosync/bin/activate; pylint src; pytest tests
 
 clean:
 	rm -rf venv.nosync
