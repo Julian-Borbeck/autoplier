@@ -6,3 +6,4 @@ data
 .Rhistory
 *.h5
 logs
+*.png

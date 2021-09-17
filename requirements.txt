@@ -1,5 +1,6 @@
 # application requirements
 tensorflow
+TensorBoard
 keras
 sklearn
 pandas

@@ -65,12 +65,23 @@
 
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
 
+from keras.layers import Input, Dense, Dropout, PReLU, LeakyReLU, BatchNormalization
+from keras.initializers import Constant
+from keras.regularizers import l1
+from keras.models import Model, load_model
+from keras.callbacks import EarlyStopping, LambdaCallback
+
+from matplotlib import pyplot
+
 # Globals
 seed = 1017
+np.random.seed(seed)
+tf.random.set_seed(seed)
 
 #get membership data
 membdf=pd.read_csv('data/membership.csv', sep=',')
@@ -130,18 +141,18 @@ bigpi = Cmat.columns
 #print(bigpi)
 
 #log transform the omics data
-Xtrain = np.log(Xtrain)
-Xvalid = np.log(Xvalid)
+X_train = np.log(Xtrain)
+X_valid = np.log(Xvalid)
 #define a standard scaler to sclae the omics data
 scaler = preprocessing.StandardScaler()
 #Fit the scaler on the training data and scale the training data
-Xtrain = scaler.fit_transform(Xtrain)
+X_train = scaler.fit_transform(X_train)
 #scale validation data with the fit  scaler
-Xvalid = scaler.transform(Xvalid)
+X_valid = scaler.transform(X_valid)
 
 #tranform Xtrain into Pi representation
-Xtilde = np.dot(Xtrain,Cmat.to_numpy())
-Xvalidtilde = np.dot(Xvalid,Cmat.to_numpy())
+Xtilde = np.dot(X_train, Cmat.to_numpy())
+Xvalidtilde = np.dot(X_valid, Cmat.to_numpy())
 #print(Xtilde.shape)
 
 # Full dof PCA for all data
@@ -156,45 +167,68 @@ X_pca = pca.fit_transform(X_scaled)
 
 # compute total variation explained
 totvar = sum(pca.explained_variance_)
+cum_var = np.cumsum(pca.explained_variance_)/totvar
 
-# init number of PCs to use
-nPC = 10
+#show variation explained (diagnostic only)
+nPC = 25
+print(cum_var[0:nPC])
 
-#print cumulative variance explained in first nPC modes
-cum_var = np.cumsum(pca.explained_variance_)
-print(cum_var[0:nPC]/totvar)
 
-#set number of latent variables to nPC
-nz = nPC
+#hyperparams
+dropout_rate = .4
+regval = 2E-2#1.5E-2
+patience = 100
+batch_size = 50
+maxepoch = 2000
+valfrac = .3
+pctexplained = .95#.997
+alpha_init = .05
+
+
+#set number of latent variables to nPC theat explain 99.7% of variance
+nz = len(np.where(cum_var<=pctexplained)[0])
 nx = Xtilde.shape[1]
 ny = nx
-dropout_rate = .5
 
-from keras.layers import Input, Dense, BatchNormalization, LeakyReLU, Dropout
-from keras.models import Model
-#from keras.utils.vis_utils import plot_model
-from matplotlib import pyplot
-from keras.callbacks import EarlyStopping, TensorBoard
-from keras.regularizers import l1
 
 # define encoder
 visible = Input(shape=(nx,))
 # encoder
-encoder = Dense(nz, kernel_regularizer=l1(1E-4))(visible)
-encoder = BatchNormalization()(encoder)
-encoder = LeakyReLU()(encoder)
+ulayer = Dense(nz, kernel_regularizer=l1(regval))
+encoder = ulayer(visible)
+#encoder = BatchNormalization()(encoder)
+#encoder = LeakyReLU()(encoder)
+encoder = PReLU(alpha_initializer=Constant(value=alpha_init),
+#encoder = PReLU(alpha_initializer=Constant(value=0.25),
+alpha_regularizer='l1')(encoder)
 encoder = Dropout(dropout_rate)(encoder)
+
 # decoder
-decoder = Dense(ny, kernel_regularizer=l1(1E-4))(encoder)
-decoder = BatchNormalization()(decoder)
+decoder = Dense(ny, kernel_regularizer=l1(regval))(encoder)
+#decoder = Dense(ny)(encoder)
+#decoder = BatchNormalization()(decoder)
 decoder = LeakyReLU()(decoder)
-encoder = Dropout(dropout_rate)(encoder)
+#decoder = PReLU(alpha_initializer=Constant(value=alpha_init*5),
+#alpha_regularizer='l1',
+#alpha_constraint=None)(decoder)
+#decoder = PReLU()(decoder)
+decoder = Dropout(dropout_rate)(decoder)
 
 # define autoencoder model
 model = Model(inputs=visible, outputs=decoder)
+# forbenius metric for Latent variables
+model.add_metric(tf.math.reduce_sum(tf.math.square(encoder)), name='magz')
+#model.add_metric(tf.math.reduce_max(tf.math.reduce_sum(ulayer.get_weights()[0], axis=0)), name='metric_1')
+#print(ulayer.get_weights()[0].shape)
+#print(tf.math.reduce_sum(ulayer.get_weights()[0], axis=0))
+
+#custom metrics
+#dependencies = {
+#    'magz': magz
+#}
 
 # compile autoencoder model
-model.compile(optimizer='adam', loss='mse', metrics=['mse'])
+model.compile(optimizer='adam', loss='mse')
 
 # plot the autoencoder
 #plot_model(model, 'autoencoder.png', show_shapes=True)
@@ -205,15 +239,23 @@ model.summary()
 #Modelcheckpoint
 #checkpointer = tf.keras.callbacks.ModelCheckpoint('bestmodel.h5', verbose=1, save_best_only=True)
 
+#from time import time
+#from keras.callbacks import TensorBoard
+
+logfile = open('logs/metrics.csv', mode='w')
+logfile.write('epoch,umetric\n')
 callbacks = [
-        EarlyStopping(patience=50, monitor='val_loss'),
-        TensorBoard(log_dir='logs')]
+        EarlyStopping(patience=patience, monitor='val_loss'),
+        LambdaCallback(on_epoch_end=lambda epoch,
+        logs: logfile.write(str(epoch)+","+str(tf.math.reduce_max(tf.math.reduce_sum(
+        np.abs(ulayer.get_weights()[0]), axis=0)).numpy())+"\n"),
+        on_train_end=lambda logs: logfile.close())]
 
 ####################################
 
 # fit the autoencoder model to reconstruct input
-history = model.fit(Xtilde, Xtilde, epochs=2000, batch_size=50, verbose=2,
-                    validation_split=0.3, callbacks=callbacks)
+history = model.fit(Xtilde, Xtilde, epochs=maxepoch, batch_size=batch_size, verbose=2,
+                    validation_split=valfrac, callbacks=callbacks)
 
 # plot loss
 pyplot.plot(history.history['loss'], label='train')
@@ -221,24 +263,63 @@ pyplot.plot(history.history['val_loss'], label='test')
 pyplot.legend()
 pyplot.show()
 
+# plot magnitude of latent variables
+pyplot.plot(np.sqrt(history.history['magz']), label='||Z||_F train')
+pyplot.plot(np.sqrt(history.history['val_magz']), label='||Z||_F test')
+pyplot.legend()
+pyplot.show()
+
+# plot saved Umetric
+udf=pd.read_csv('logs/metrics.csv', sep=',', encoding='utf-8' )
+pyplot.plot(udf["epoch"], udf["umetric"], label='||U||_L1')
+pyplot.legend()
+pyplot.show()
+
+#show U weights as image
+fig, ax = pyplot.subplots(1,1)
+w = np.array(ulayer.get_weights()[0])
+img = ax.imshow(w, aspect='auto')
+ax.set_yticks(range(len(bigpi)))
+ax.set_yticklabels(bigpi)
+fig.colorbar(img)
+fig.subplots_adjust(left=0.7)
+pyplot.show()
+
+#show U weights as image
+fig, ax = pyplot.subplots(1,1)
+#find pathways(rows) with weight >.05
+wtrim= w[np.any(w > 0.05, axis=1)]
+bigpitrim = bigpi[np.any(w > 0.05, axis=1)]
+img = ax.imshow(wtrim, aspect='auto')
+ax.set_yticks(range(len(bigpitrim)))
+ax.set_yticklabels(bigpitrim)
+fig.colorbar(img)
+fig.subplots_adjust(left=0.7)
+pyplot.show()
+
+
 # define an encoder model (without the decoder)
 final_encoder = Model(inputs=visible, outputs=encoder)
+# compile encoder model
+final_encoder.compile(optimizer='adam', loss='mse')
+
+# ----- save trained models ------
+#save the autoencoder to file
+model.save('autoencoder.h5')
 # save the encoder to file
 final_encoder.save('encoder.h5')
 
+# ----- load saved models ------
+#recover saved model
+final_encoder = load_model('encoder.h5')
+#load saved autoencoder
+final_model = load_model('autoencoder.h5')
 
+# ---- change basis for training and validation sets---
 
-#Define autoencoder
-#from sknn.ae import AutoEncoder, Layer
-#ae = AutoEncoder(
-#    layers=[
-#        Layer(activation="Sigmoid", warning=None, type=u'autoencoder', name="umat",
-#              units=10, cost=u'msre', tied_weights=True, corruption_level=0.5)],
-#        warning=None, parameters=None, random_state=42, learning_rule=u'sgd',
-#        learning_rate=0.01, learning_momentum=0.9, normalize='batch',
-#        regularize="L1", weight_decay=1E-4, dropout_rate=.5, batch_size=30,
-#        n_iter=100, n_stable=10, f_stable=0.001, valid_set=None, valid_size=.3,
-#        loss_type='mse', callback=None, debug=False, verbose=None)
+Ztrain = pd.DataFrame(final_encoder.predict(Xtilde), index=Xtrain.index)
+Zvalid = pd.DataFrame(final_encoder.predict(Xvalidtilde), index=Xvalid.index)
 
-#train AutoEncoder
-#ae.fit(X_train)
+#save transformed omics
+Ztrain.to_csv('data/Ztrain.csv')
+Zvalid.to_csv('data/Zvalid.csv')
