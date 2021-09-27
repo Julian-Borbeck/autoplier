@@ -2,7 +2,7 @@ venv.nosync: venv.nosync/bin/activate
 
 venv.nosync/bin/activate: requirements.txt
 	python3 -m venv venv.nosync
-	. venv.nosync/bin/activate; pip install --upgrade pip; pip install -r requirements.txt; pip install pytest; pip install pylint
+	. venv.nosync/bin/activate; pip install --upgrade pip; pip install -r requirements.txt
 	touch venv.nosync/bin/activate
 
 test: venv.nosync
@@ -11,3 +11,6 @@ test: venv.nosync
 clean:
 	rm -rf venv.nosync
 	find . -depth -name "*.pyc" -type f -delete
+
+main: venv.nosync
+		. venv.nosync/bin/activate; python main.py

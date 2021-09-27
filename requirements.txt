@@ -1,14 +1,10 @@
 # application requirements
-tensorflow
-TensorBoard
-keras
-sklearn
+pylint
+pytest
 pandas
-scipy
+numpy
+#scipy
+sklearn
+#keras
+tensorflow
 matplotlib
-
-#tableone
-#streamlit
-#metaspace2020
-#watchdog
-#scikit-image

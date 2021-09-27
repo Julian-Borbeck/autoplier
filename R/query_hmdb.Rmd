@@ -29,7 +29,7 @@ library(hmdbQuery)
 
 ```{r, include=FALSE}
 # Download metabolite names
-df <- read.csv("refmet_results.txt", sep = "\t", comment.char = "#")
+df <- read.csv("data/refmet_results.txt", sep = "\t", comment.char = "#")
 ```
 
 ```{r, warning=FALSE, message=FALSE, include=FALSE}
