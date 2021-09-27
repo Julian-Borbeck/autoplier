@@ -3,7 +3,7 @@ Transform metabolite GCMS data to pathway representation via HMDB
 
 ## Getting Started
 1) Create a `data` folder (highlighted below). The file directory should look like this.
-+  jdrfmetabo/
+- jdrfmetabo/
   - R/
     - query_hmdb.Rmd
   - refmet_results_example.txt
