@@ -3,16 +3,16 @@ Transform metabolite GCMS data to pathway representation via HMDB
 
 ## Getting Started
 1) Create a `data` folder (highlighted below). The file directory should look like this.
-  -  jdrfmetabo/
-    - R/
-      - query_hmdb.Rmd
-    - refmet_results_example.txt
-    - src/
-    - tests/
-    - **data**/
-      - **refmet_results.txt**
-    - main.py
-    - Makefile
++  jdrfmetabo/
+  - R/
+    - query_hmdb.Rmd
+  - refmet_results_example.txt
+  - src/
+  - tests/
+  - **data**/
+    - **refmet_results.txt**
+  - main.py
+  - Makefile
 
 2) Manually, preprocess the native omics data. Get metabolite names and HMDB ids and save
 them to `data/refmet_results.txt`. An example file is located in
