@@ -150,31 +150,32 @@ bigpi = Cmat.columns
 #print(bigpi)
 
 #log transform the omics data (concentrations are non-normal)
-X_train = np.log(Xtrain)
-X_valid = np.log(Xvalid)
-
-#define a standard scaler to scale the omics data
-scaler = preprocessing.StandardScaler()
-#Fit the scaler on the training data and scale the training data
-X_train = scaler.fit_transform(X_train)
-#scale validation data with the fit  scaler
-X_valid = scaler.transform(X_valid)
+logXtrain = np.log(Xtrain)
+logXvalid = np.log(Xvalid)
 
 #tranform Xtrain into Pi representation
-Xtilde = np.dot(X_train, Cmat.to_numpy())
-Xvalidtilde = np.dot(X_valid, Cmat.to_numpy())
+Xtilde = np.dot(logXtrain, Cmat.to_numpy())
+Xvalidtilde = np.dot(logXvalid, Cmat.to_numpy())
 #print(Xtilde.shape)
+
+#define a standard scaler to scale the pathway data
+scaler = preprocessing.StandardScaler()
+#Fit the scaler on the training data and scale the training data
+Xtilde = scaler.fit_transform(Xtilde)
+#scale validation data with the fit scaler
+Xvalidtilde = scaler.transform(Xvalidtilde)
 
 #  - - - - - - Init guess data compressibility  - - - - - -
 # Full dof PCA for all data
 pca = PCA(random_state = seed) #do not define number of PCs
 
 #define standard scaler
-scaler2 = preprocessing.StandardScaler()
+#scaler2 = preprocessing.StandardScaler()
 
 #fit pca on the training data
-X_scaled = scaler2.fit_transform(Xtilde)
-X_pca = pca.fit_transform(X_scaled)
+#X_scaled = scaler2.fit_transform(Xtilde)
+#X_pca = pca.fit_transform(X_scaled)
+X_pca = pca.fit_transform(Xtilde)
 
 # compute total variation explained
 totvar = sum(pca.explained_variance_)
@@ -186,13 +187,13 @@ print(cum_var[0:nPC])
 
 # - - - - - - Set hyperparams  - - - - - -
 #hyperparams (todo: insert proper grid search proceedure here)
-dropout_rate = .4
-regval = 2E-2#1.5E-2
+dropout_rate = 0.09#0.4
+regval = 1.20E-3#1.5E-3#1E-3#2.5E-3#2E-2#1.5E-2
 patience = 100
-batch_size = 50
+batch_size = 50#50
 maxepoch = 2000
 valfrac = .3
-pctexplained = .95#.997
+pctexplained = .99
 alpha_init = .05
 
 # - - - - - - Model dimensions  - - - - - -
@@ -206,6 +207,7 @@ ny = nx
 visible = Input(shape=(nx,))
 
 # define a dense single layer (Ulayer) with L1 regularization to encourage sparsity
+#ulayer = Dense(nz, kernel_regularizer=l1(regval), activation="relu", name="ulayer")
 ulayer = Dense(nz, kernel_regularizer=l1(regval), name="ulayer")
 
 #foward pass the input through the ulayer
@@ -303,9 +305,37 @@ pyplot.show()
 
 #show U weights as image with trivial pathways removed
 fig, ax = pyplot.subplots(1,1)
-#find pathways(rows) with weight >.05
-wtrim= w[np.any(w > 0.05, axis=1)]
-bigpitrim = bigpi[np.any(w > 0.05, axis=1)]
+
+#unit scaling
+#w = np.abs(w)
+#w = w - w.min(axis=0)
+#w = w / w.max(axis=0)
+
+#w = np.square(w) / w.var(axis=0) #Signal to Noise ratio
+#w = np.abs(w) / w.std(axis=0) #sqrt(Signal to Noise ratio)
+#w = np.log10(w) #SNR in decibles
+#print( np.log10(np.square(w.mean(axis=0))/w.var(axis=0)))
+
+#compute probabilites propto |weight|
+probs = 1 - np.exp(-np.abs(w)) + np.finfo(float).eps #bigger values have higher prob
+
+#compute global entropy for entire U matrix
+gprobs = probs / probs.sum() #sum of all probs = 1
+gentropy = -(gprobs*np.log(gprobs)).sum() #thermodynamic definition
+print(gentropy)
+
+
+#compute entropy for each U column
+probs = probs / probs.sum(axis=0) #sum of column probs = 1
+entropy = -(probs*np.log(probs)).sum(axis=0) #thermodynamic definition
+print(entropy)
+
+
+w = probs#show normalized probabilities
+#find pathways(rows) with any prob > 3%
+wsel = np.any(w > 0.03, axis=1)
+wtrim= w[wsel]
+bigpitrim = bigpi[wsel]
 img = ax.imshow(wtrim, aspect='auto')
 ax.set_yticks(range(len(bigpitrim)))
 ax.set_yticklabels(bigpitrim)
