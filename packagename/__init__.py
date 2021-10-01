@@ -2,3 +2,8 @@
 """
 
 __author__ = 'dmontemayor'
+
+
+def noop():
+    """ noop function does nothing"""
+
