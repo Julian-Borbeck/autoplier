@@ -1,6 +1,7 @@
 # application requirements
-pylint
+flake8
 pytest
+coverage
 pandas
 numpy
 #scipy

@@ -8,7 +8,8 @@ Y = pd.read_csv('tests/test_data/traindataY.csv').values()
 with open('tests/test_data/ap_example.pkl', 'rb') as f:
     ap_example = load(f)
 
-# TODO: Need to update tests with expected output (number of dimensions, expected values, etc).
+# TODO: Need to update tests with expected output (number of
+#  dimensions, expected values, etc).
 
 
 def test_embed_basic():

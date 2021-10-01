@@ -1,4 +1,11 @@
 # jdrfmetabo
+
+<!-- badges: start -->
+
+[![build](https://github.com/dmontemayor/jdrfmetabo/workflows/build/badge.svg)](https://github.com/dmontemayor/jdrfmetabo/actions) [![Codecov test coverage](https://codecov.io/gh/dmontemayor/jdrfmetabo/branch/main/graph/badge.svg)](https://codecov.io/gh/dmontemayor/jdrfmetabo?branch=main)
+
+<!-- badges: end -->
+
 Transform metabolite GCMS data to pathway representation via HMDB
 
 ## Getting Started
