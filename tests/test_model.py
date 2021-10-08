@@ -1,4 +1,4 @@
-from packagename.model import autoPLIER
+from autoplier.model import autoPLIER
 from pickle import load
 import pandas as pd
 
@@ -31,6 +31,7 @@ def test_embed_xy():
     """
     ap = autoPLIER(n_components=100)
     ap.fit(X)
+    ap.build_encoder()
     Y_embed = ap.transform(Y)
     assert Y_embed.__class__.__name__ == "ndarray"
 
