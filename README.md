@@ -1,4 +1,4 @@
-# CellO-MultiPLIER
+# Autoplier
 Embed Omics data using an interpretable Tensorflow based model.
 
 ![Build Status](https://github.com/dmontemayor/jdrfmetabo/tree/devel/tests/badge.svg)
