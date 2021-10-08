@@ -1,7 +1,7 @@
 """NOOP test
 """
 
-from autoplier import noop
+from src import noop
 
 
 def test_noop():

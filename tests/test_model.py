@@ -1,4 +1,4 @@
-from autoplier.model import autoPLIER
+from src.autoplier.model import autoPLIER
 from pickle import load
 import pandas as pd
 
