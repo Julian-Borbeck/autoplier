@@ -8,6 +8,7 @@ from tensorflow.keras.initializers import Constant
 from tensorflow.keras.regularizers import l1
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping, LambdaCallback
+from sklearn import preprocessing
 
 
 def set_seed_(seed):
@@ -62,12 +63,22 @@ class autoPLIER:
         # compile autoencoder model - with adam opt and use mse as reconstruction error
         self.model.compile(optimizer='adam', loss='mse')
 
+        self.scaler = preprocessing.StandardScaler()
+
+        self.components_decomposition_ = None
+
     # - - - - - - Model Training  - - - - - -
-    def fit(self, x_train, callbacks =[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
+    def fit(self, x_train, pathways, callbacks =[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
+
+        x_train_processed = self.preprocess(x_train, pathways, Fit = True)
 
         # fit the autoencoder model to reconstruct input
-        history = self.model.fit(x_train, x_train, epochs=maxepoch, batch_size=batch_size, verbose=verbose,
+        history = self.model.fit(x_train_processed, x_train_processed, epochs=maxepoch, batch_size=batch_size, verbose=verbose,
                                  validation_split=valfrac, callbacks=callbacks)
+
+        comp_dec = self.final_encoder.get_layer('ulayer')
+        self.components_decomposition_ = pd.DataFrame(comp_dec.get_weights()[0], index= pathways.index)
+
         return history
 
     # - - - - - - Build Encoder Model - - - - - -
@@ -79,14 +90,20 @@ class autoPLIER:
         # compile encoder model- with adam opt and use mse as reconstruction error
         self.final_encoder.compile(optimizer='adam', loss='mse')
 
-    def transform(self, x_predict, index):
-        z_predicted = pd.DataFrame(self.final_encoder.predict(x_predict), index=index)
+    def transform(self, x_predict, pathways, index):
+
+        x_predict_processed = self.preprocess(x_predict, pathways, fit = False)
+
+        z_predicted = pd.DataFrame(self.final_encoder.predict(x_predict_processed), index=index)
 
         return z_predicted
 
-    def fit_transform(self, x_train, index, callbacks=[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
+    def fit_transform(self, x_train, pathways, index, callbacks=[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
         # fit the autoencoder model to reconstruct input
-        self.model.fit(x_train, x_train, epochs=maxepoch, batch_size=batch_size, verbose=verbose,
+
+        x_train_processed = self.preprocess(x_train, pathways, fit = True)
+
+        self.model.fit(x_train_processed, x_train_processed, epochs=maxepoch, batch_size=batch_size, verbose=verbose,
                                  validation_split=valfrac, callbacks=callbacks)
 
         # define an encoder model (without the decoder)
@@ -94,6 +111,25 @@ class autoPLIER:
 
         # compile encoder model- with adam opt and use mse as reconstruction error
         self.final_encoder.compile(optimizer='adam', loss='mse')
-        z_predicted = pd.DataFrame(self.final_encoder.predict(x_train), index=index)
+
+        z_predicted = pd.DataFrame(self.final_encoder.predict(x_train_processed), index=index)
+
+        comp_dec = self.final_encoder.get_layer('ulayer')
+        self.components_decomposition_ = pd.DataFrame(comp_dec.get_weights()[0], index=pathways.index)
 
         return z_predicted
+
+    def preprocess(self, X, pathways, fit):
+
+        X = X[X.columns[X.columns.isin(pathways.columns)]]
+        pathways = pathways[pathways.columns[pathways.columns.isin(X.columns)]]
+
+        X_tilde = np.dot(X, pathways.T.to_numpy())
+
+        if(fit == True):
+            X_tilde = self.scaler.fit_transform(X_tilde)
+            self.scaler_is_fit = True
+        else:
+            X_tilde = self.scaler.transform(X_tilde)
+
+        return X_tilde
