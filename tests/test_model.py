@@ -17,7 +17,7 @@ def test_embed_basic():
 
     return: An ND-array with the Z embedded data
     """
-    ap = autoPLIER(X.shape[1], n_components=100)
+    ap = autoPLIER(n_components=100)
     Z = ap.fit_transform(X, index = index)
     assert Z.__class__.__name__ == "ndarray"
 
@@ -28,7 +28,7 @@ def test_embed_xy():
 
     return: An ND-array with the Y embedding data
     """
-    ap = autoPLIER(X.shape[1], n_components=100)
+    ap = autoPLIER(n_components=100)
     ap.fit(X[0:50])
     ap.build_encoder()
     Y_embed = ap.transform(X[50:100], index = index[50:100])
@@ -41,7 +41,7 @@ def test_get_u_matrix():
 
     return: a DataFrame with the U matrix
     """
-    ap = autoPLIER(X.shape[1], n_components=100)
+    ap = autoPLIER(n_components=100)
     ap.fit_transform(X, index=index)
     U = ap.components_decomposition_
     assert U.__class__.__name__ == "DataFrame"

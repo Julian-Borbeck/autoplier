@@ -18,15 +18,31 @@ def set_seed_(seed):
 
 class autoPLIER:
 
-    def __init__(self, n_inputs, n_components=100, dropout_rate=0.09, regval=1.20E-3, alpha_init=.05):
+    def __init__(self, n_components=100, dropout_rate=0.09, regval=1.20E-3, alpha_init=.05):
+
+        self.n_inputs = 2
+
+        self.n_components = n_components
+
+        self.dropout_rate = dropout_rate
+
+        self.regval = regval
+
+        self.alpha_init = alpha_init
+
+        self.scaler = preprocessing.StandardScaler()
+
+        self.components_decomposition_ = None
+
+    def build_model(self):
 
         # - - - - - - Model Arch  - - - - - -
         # visible is the input data
-        self.visible = Input(shape=(n_inputs,))
+        self.visible = Input(shape=(self.n_inputs,))
 
         # define a dense single layer (Ulayer) with L1 regularization to encourage sparsity
         # ulayer = Dense(nz, kernel_regularizer=l1(regval), activation="relu", name="ulayer")
-        self.ulayer = Dense(n_components, kernel_regularizer=l1(regval), name="ulayer")
+        self.ulayer = Dense(self.n_components, kernel_regularizer=l1(self.regval), name="ulayer")
 
         # foward pass the input through the ulayer
         self.encoder = self.ulayer(self.visible)
@@ -37,14 +53,14 @@ class autoPLIER:
         # Apply a PReLU type activation to constrain for positive weights
         # Logistic activation may also be a viable choice here - should give standardized
         #   latent variable values so we can skip a post-processing step.
-        self.encoder = PReLU(alpha_initializer=Constant(value=alpha_init),
+        self.encoder = PReLU(alpha_initializer=Constant(value=self.alpha_init),
                              alpha_regularizer='l1')(self.encoder)
 
         # Apply Dropout to encourage parsimony (ulayer sparsity)
-        self.encoder = Dropout(dropout_rate)(self.encoder)
+        self.encoder = Dropout(self.dropout_rate)(self.encoder)
 
         # The decoder does not have to be symmetric with encoder but let's have L1 reg anyway
-        self.decoder = Dense(n_inputs, kernel_regularizer=l1(regval))(self.encoder)
+        self.decoder = Dense(self.n_inputs, kernel_regularizer=l1(self.regval))(self.encoder)
 
         self.decoder = BatchNormalization()(self.decoder)
 
@@ -52,7 +68,7 @@ class autoPLIER:
         self.decoder = LeakyReLU()(self.decoder)
 
         # Apply the same Dropout as in the encoder
-        self.decoder = Dropout(dropout_rate)(self.decoder)
+        self.decoder = Dropout(self.dropout_rate)(self.decoder)
 
         # - - - - - - Build Model - - - - - -
         self.model = Model(inputs=self.visible, outputs=self.decoder)
@@ -62,10 +78,6 @@ class autoPLIER:
 
         # compile autoencoder model - with adam opt and use mse as reconstruction error
         self.model.compile(optimizer='adam', loss='mse')
-
-        self.scaler = preprocessing.StandardScaler()
-
-        self.components_decomposition_ = None
 
     # - - - - - - Model Training  - - - - - -
     def fit(self, x_train, pathways, callbacks =[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
@@ -128,7 +140,10 @@ class autoPLIER:
 
         if(fit == True):
             X_tilde = self.scaler.fit_transform(X_tilde)
+            self.n_inputs = X_tilde.shape[1]
+            self.build_model()
             self.scaler_is_fit = True
+
         else:
             X_tilde = self.scaler.transform(X_tilde)
 
