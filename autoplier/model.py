@@ -88,6 +88,8 @@ class autoPLIER:
         history = self.model.fit(x_train_processed, x_train_processed, epochs=maxepoch, batch_size=batch_size, verbose=verbose,
                                  validation_split=valfrac, callbacks=callbacks)
 
+
+        self.build_encoder()
         comp_dec = self.final_encoder.get_layer('ulayer')
         self.components_decomposition_ = pd.DataFrame(comp_dec.get_weights()[0], index= pathways.index)
 
