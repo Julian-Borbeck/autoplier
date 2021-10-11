@@ -102,15 +102,15 @@ class autoPLIER:
         # compile encoder model- with adam opt and use mse as reconstruction error
         self.final_encoder.compile(optimizer='adam', loss='mse')
 
-    def transform(self, x_predict, pathways, index):
+    def transform(self, x_predict, pathways):
 
         x_predict_processed = self.preprocess(x_predict, pathways, fit = False)
 
-        z_predicted = pd.DataFrame(self.final_encoder.predict(x_predict_processed), index=index)
+        z_predicted = pd.DataFrame(self.final_encoder.predict(x_predict_processed), index=x_predict.index)
 
         return z_predicted
 
-    def fit_transform(self, x_train, pathways, index, callbacks=[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
+    def fit_transform(self, x_train, pathways, callbacks=[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
         # fit the autoencoder model to reconstruct input
 
         x_train_processed = self.preprocess(x_train, pathways, fit = True)
@@ -124,7 +124,7 @@ class autoPLIER:
         # compile encoder model- with adam opt and use mse as reconstruction error
         self.final_encoder.compile(optimizer='adam', loss='mse')
 
-        z_predicted = pd.DataFrame(self.final_encoder.predict(x_train_processed), index=index)
+        z_predicted = pd.DataFrame(self.final_encoder.predict(x_train_processed), index=x_train.index)
 
         comp_dec = self.final_encoder.get_layer('ulayer')
         self.components_decomposition_ = pd.DataFrame(comp_dec.get_weights()[0], index=pathways.index)
