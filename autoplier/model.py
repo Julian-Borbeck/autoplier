@@ -82,7 +82,7 @@ class autoPLIER:
     # - - - - - - Model Training  - - - - - -
     def fit(self, x_train, pathways, callbacks =[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
 
-        x_train_processed = self.preprocess(x_train, pathways, Fit = True)
+        x_train_processed = self.preprocess(x_train, pathways, fit = True)
 
         # fit the autoencoder model to reconstruct input
         history = self.model.fit(x_train_processed, x_train_processed, epochs=maxepoch, batch_size=batch_size, verbose=verbose,
