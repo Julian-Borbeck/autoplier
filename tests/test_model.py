@@ -3,9 +3,8 @@ import numpy as np
 import pandas as pd
 
 # Grab the test data
-X = np.load("testdata.npy", mmap_mode=None, allow_pickle=False, fix_imports=True, encoding='ASCII')
-pathways = pd.DataFrame()## TODO: create example pathway file
-index = list(range(0, X.shape[0]))
+X = pd.read_csv("test_data/test_X.csv", sep = ",")
+pathways = pd.read_csv("test_data/test_pathways.csv", sep = ",")
 
 # TODO: Need to update tests with expected output (number of
 #  dimensions, expected values, etc).
@@ -18,7 +17,7 @@ def test_embed_basic():
     return: An ND-array with the Z embedded data
     """
     ap = autoPLIER(n_components=100)
-    Z = ap.fit_transform(X, index = index)
+    Z = ap.fit_transform(X)
     assert Z.__class__.__name__ == "ndarray"
 
 
@@ -31,7 +30,7 @@ def test_embed_xy():
     ap = autoPLIER(n_components=100)
     ap.fit(X[0:50])
     ap.build_encoder()
-    Y_embed = ap.transform(X[50:100], index = index[50:100])
+    Y_embed = ap.transform(X[50:100])
     assert Y_embed.__class__.__name__ == "ndarray"
 
 
@@ -42,6 +41,6 @@ def test_get_u_matrix():
     return: a DataFrame with the U matrix
     """
     ap = autoPLIER(n_components=100)
-    ap.fit_transform(X, index=index)
+    ap.fit_transform(X)
     U = ap.components_decomposition_
     assert U.__class__.__name__ == "DataFrame"
