@@ -48,7 +48,7 @@ class autoPLIER:
         self.encoder = self.ulayer(self.visible)
 
         # Normalize the encoder output
-        self.encoder = BatchNormalization()(self.encoder)  # not necessary in our case.
+        #self.encoder = BatchNormalization()(self.encoder)  # not necessary in our case.
 
         # Apply a PReLU type activation to constrain for positive weights
         # Logistic activation may also be a viable choice here - should give standardized
@@ -62,7 +62,7 @@ class autoPLIER:
         # The decoder does not have to be symmetric with encoder but let's have L1 reg anyway
         self.decoder = Dense(self.n_inputs, kernel_regularizer=l1(self.regval))(self.encoder)
 
-        self.decoder = BatchNormalization()(self.decoder)
+        #self.decoder = BatchNormalization()(self.decoder)
 
         # Apply a ReLU type activation
         self.decoder = LeakyReLU()(self.decoder)
