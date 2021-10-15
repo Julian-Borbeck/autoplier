@@ -3,7 +3,7 @@ import numpy as np
 
 from tensorflow.random import set_seed
 from tensorflow.math import reduce_max, reduce_sum, square
-from tensorflow.keras.layers import Input, Dense, Dropout, PReLU, LeakyReLU, BatchNormalization
+from tensorflow.keras.layers import Input, Dense, Dropout, ReLU
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras.regularizers import l1
 from tensorflow.keras.models import Model
@@ -53,7 +53,7 @@ class autoPLIER:
         # Apply a PReLU type activation to constrain for positive weights
         # Logistic activation may also be a viable choice here - should give standardized
         #   latent variable values so we can skip a post-processing step.
-        self.encoder = PReLU(alpha_initializer=Constant(value=self.alpha_init),
+        self.encoder = ReLU(alpha_initializer=Constant(value=self.alpha_init),
                              alpha_regularizer='l1')(self.encoder)
 
         # Apply Dropout to encourage parsimony (ulayer sparsity)
@@ -65,7 +65,7 @@ class autoPLIER:
         #self.decoder = BatchNormalization()(self.decoder)
 
         # Apply a ReLU type activation
-        self.decoder = LeakyReLU()(self.decoder)
+        self.decoder = ReLU()(self.decoder)
 
         # Apply the same Dropout as in the encoder
         self.decoder = Dropout(self.dropout_rate)(self.decoder)
