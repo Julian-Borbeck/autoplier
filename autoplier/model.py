@@ -120,16 +120,7 @@ class autoPLIER:
         self.model.fit(x_train_processed, x_train_processed, epochs=maxepoch, batch_size=batch_size, verbose=verbose,
                                  validation_split=valfrac, callbacks=callbacks)
 
-        # define an encoder model (without the decoder)
-        self.final_encoder = Model(inputs=self.visible, outputs=self.encoder)
-
-        # compile encoder model- with adam opt and use mse as reconstruction error
-        self.final_encoder.compile(optimizer='adam', loss='mse')
-
         z_predicted = pd.DataFrame(self.final_encoder.predict(x_train_processed), index=x_train.index)
-
-        comp_dec = self.final_encoder.get_layer('ulayer')
-        self.components_decomposition_ = pd.DataFrame(comp_dec.get_weights()[0], index=pathways.index)
 
         return z_predicted
 
