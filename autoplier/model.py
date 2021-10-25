@@ -53,8 +53,7 @@ class autoPLIER:
         # Apply a PReLU type activation to constrain for positive weights
         # Logistic activation may also be a viable choice here - should give standardized
         #   latent variable values so we can skip a post-processing step.
-        self.encoder = ReLU(alpha_initializer=Constant(value=self.alpha_init),
-                             alpha_regularizer='l1')(self.encoder)
+        self.encoder = ReLU()(self.encoder)
 
         # Apply Dropout to encourage parsimony (ulayer sparsity)
         self.encoder = Dropout(self.dropout_rate)(self.encoder)
