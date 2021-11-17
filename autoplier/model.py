@@ -18,17 +18,13 @@ def set_seed_(seed):
 
 class autoPLIER:
 
-    def __init__(self, n_components=100, dropout_rate=0.09, regval=1.20E-3, alpha_init=.05):
+    def __init__(self, n_components=100, regval=1.20E-3):
 
         self.n_inputs = 2
 
         self.n_components = n_components
 
-        self.dropout_rate = dropout_rate
-
         self.regval = regval
-
-        self.alpha_init = alpha_init
 
         self.scaler = preprocessing.StandardScaler()
 
