@@ -18,7 +18,7 @@ def set_seed_(seed):
 
 class autoPLIER:
 
-    def __init__(self, n_components=100, regval=1.20E-3):
+    def __init__(self, n_components=100, regval=1.20E-7):
 
         self.n_inputs = 2
 
