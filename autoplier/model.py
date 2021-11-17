@@ -47,27 +47,16 @@ class autoPLIER:
         # foward pass the input through the ulayer
         self.encoder = self.ulayer(self.visible)
 
-        # Normalize the encoder output
-        #self.encoder = BatchNormalization()(self.encoder)  # not necessary in our case.
-
-        # Apply a PReLU type activation to constrain for positive weights
+        # Apply a ReLU type activation to constrain for positive weights
         # Logistic activation may also be a viable choice here - should give standardized
         #   latent variable values so we can skip a post-processing step.
         self.encoder = ReLU()(self.encoder)
 
-        # Apply Dropout to encourage parsimony (ulayer sparsity)
-        self.encoder = Dropout(self.dropout_rate)(self.encoder)
-
         # The decoder does not have to be symmetric with encoder but let's have L1 reg anyway
-        self.decoder = Dense(self.n_inputs, kernel_regularizer=l1(self.regval))(self.encoder)
-
-        #self.decoder = BatchNormalization()(self.decoder)
+        self.decoder = Dense(self.n_inputs)(self.encoder)
 
         # Apply a ReLU type activation
         self.decoder = ReLU()(self.decoder)
-
-        # Apply the same Dropout as in the encoder
-        self.decoder = Dropout(self.dropout_rate)(self.decoder)
 
         # - - - - - - Build Model - - - - - -
         self.model = Model(inputs=self.visible, outputs=self.decoder)
