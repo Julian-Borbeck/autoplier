@@ -64,7 +64,7 @@ class autoPLIER:
         self.model.compile(optimizer='adam', loss='mse')
 
     # - - - - - - Model Training  - - - - - -
-    def fit(self, x_train, pathways, callbacks=[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
+    def fit(self, x_train, pathways, callbacks=[], batch_size=None, maxepoch=2000, verbose=2, valfrac=.3):
 
         x_train_processed = self.preprocess(x_train, pathways, fit=True)
 
@@ -95,7 +95,7 @@ class autoPLIER:
 
         return z_predicted
 
-    def fit_transform(self, x_train, pathways, callbacks=[], batch_size=50, maxepoch=2000, verbose=2, valfrac=.3):
+    def fit_transform(self, x_train, pathways, callbacks=[], batch_size=None, maxepoch=2000, verbose=2, valfrac=.3):
         # fit the autoencoder model to reconstruct input
 
         x_train_processed = self.preprocess(x_train, pathways, fit=True)
@@ -124,3 +124,43 @@ class autoPLIER:
             X_tilde = self.scaler.transform(X_tilde)
 
         return X_tilde
+
+
+# epsilon sparsity function
+def sparsity_epsilon(z, epsilon):
+    s = (np.sum((np.abs(z) < epsilon).astype(int)).sum()) / float(z.size)
+    return s
+
+
+def optimize_l1(target_sparsity, delta, start_l1, x_train, pathways, callbacks=[],
+                batch_size=None, maxepoch=2000, verbose=0, valfrac=.3):
+    set_seed_(111)
+    sparsity = 0
+    tuning_l1 = start_l1
+    step = 10
+    closest = 1
+    closest_l1 = tuning_l1
+    while abs(sparsity - target_sparsity) > delta:
+
+        mod = autoPLIER(100, regval=tuning_l1)
+        mod.fit(x_train, pathways, callbacks, batch_size=batch_size,
+                maxepoch=maxepoch, verbose=verbose, valfrac=valfrac)
+        sparsity = sparsity_epsilon(mod.components_decomposition_, 10 ** -4)
+        diff = sparsity - target_sparsity
+
+        if abs(diff) < closest and diff < 0:
+            closest = abs(diff)
+            closest_l1 = tuning_l1
+            if abs(diff) > delta:
+                tuning_l1 = tuning_l1 * step
+
+        else:
+
+            if diff > 0:
+                step = step / 2
+                tuning_l1 = closest_l1 * step
+            else:
+                tuning_l1 = closest_l1 / step
+                step = step / 2
+                tuning_l1 = tuning_l1 * step
+    return closest_l1
