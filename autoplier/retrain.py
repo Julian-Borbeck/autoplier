@@ -53,7 +53,7 @@ class autoPLIER_fixed_ulayer:
 
         # foward pass the input through the ulayer
         self.encoder_free = self.ulayer_free(self.visible)
-
+        self.encoder_free = ReLU()(self.encoder_free)
         self.merged = concatenate([self.encoder_fixed, self.encoder_free], axis=1)
         self.merged = Flatten()(self.merged)
 
@@ -82,8 +82,6 @@ class autoPLIER_fixed_ulayer:
                                      verbose=verbose, validation_split=valfrac, callbacks=callbacks)
 
             self.build_encoder()
-            comp_dec = self.final_encoder.get_layer('ulayer')
-            self.components_decomposition_ = pd.DataFrame(comp_dec.get_weights()[0], index=pathways.index)
 
             return history
 
