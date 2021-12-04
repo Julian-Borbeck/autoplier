@@ -91,7 +91,7 @@ class autoPLIER_fixed_ulayer:
     def build_encoder(self):
 
             # define an encoder model (without the decoder)
-            self.final_encoder = Model(inputs=self.visible, outputs=self.encoder)
+            self.final_encoder = Model(inputs=self.visible, outputs=self.merged)
 
             # compile encoder model- with adam opt and use mse as reconstruction error
             self.final_encoder.compile(optimizer='adam', loss='mse')
