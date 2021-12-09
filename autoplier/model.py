@@ -4,6 +4,7 @@ import numpy as np
 from tensorflow.random import set_seed
 from tensorflow.math import reduce_max, reduce_sum, square
 from tensorflow.keras.layers import Input, Dense, ReLU
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras.regularizers import l1
 from tensorflow.keras.models import Model
@@ -18,7 +19,7 @@ def set_seed_(seed):
 
 class autoPLIER:
 
-    def __init__(self, n_components=100, regval=1.20E-7):
+    def __init__(self, n_components=100, regval=1.20E-7, learning_rate = 0.01):
 
         self.n_inputs = 2
 
@@ -29,6 +30,8 @@ class autoPLIER:
         self.scaler = preprocessing.StandardScaler()
 
         self.components_decomposition_ = None
+
+        self.learning_rate = learning_rate
 
     def build_model(self):
 
@@ -60,8 +63,11 @@ class autoPLIER:
         # Define a forbenius metric for the Latent variables to compare with paper
         self.model.add_metric(reduce_sum(square(self.encoder)), name='magz')
 
+        #Define optimizer and learning rate
+        self.optimizer = Adam(learning_rate=self.learning_rate)
+
         # compile autoencoder model - with adam opt and use mse as reconstruction error
-        self.model.compile(optimizer='adam', loss='mse')
+        self.model.compile(optimizer= self.optimizer, loss='mse')
 
     # - - - - - - Model Training  - - - - - -
     def fit(self, x_train, pathways, callbacks=[], batch_size=None, maxepoch=2000, verbose=2, valfrac=.3):
@@ -85,7 +91,7 @@ class autoPLIER:
         self.final_encoder = Model(inputs=self.visible, outputs=self.encoder)
 
         # compile encoder model- with adam opt and use mse as reconstruction error
-        self.final_encoder.compile(optimizer='adam', loss='mse')
+        self.final_encoder.compile(optimizer= self.optimizer, loss='mse')
 
     def transform(self, x_predict, pathways):
 
