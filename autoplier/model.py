@@ -6,6 +6,7 @@ from tensorflow.math import reduce_max, reduce_sum, square
 from tensorflow.keras.layers import Input, Dense, ReLU
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.initializers import Constant
+from tensorflow.keras.constraints import NonNeg
 from tensorflow.keras.regularizers import l1
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping, LambdaCallback
@@ -41,7 +42,7 @@ class autoPLIER:
 
         # define a dense single layer (Ulayer) with L1 regularization to encourage sparsity
         # ulayer = Dense(nz, kernel_regularizer=l1(regval), activation="relu", name="ulayer")
-        self.ulayer = Dense(self.n_components, kernel_regularizer=l1(self.regval), name="ulayer")
+        self.ulayer = Dense(self.n_components, kernel_regularizer=l1(self.regval), kernel_constraint=NonNeg(), name="ulayer")
 
         # foward pass the input through the ulayer
         self.encoder = self.ulayer(self.visible)
