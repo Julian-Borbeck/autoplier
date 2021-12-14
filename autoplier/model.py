@@ -34,6 +34,8 @@ class autoPLIER:
 
         self.learning_rate = learning_rate
 
+        self.scaled_components_decomposition_ = None
+
     def build_model(self):
 
         # - - - - - - Model Arch  - - - - - -
@@ -82,7 +84,9 @@ class autoPLIER:
         self.build_encoder()
         comp_dec = self.final_encoder.get_layer('ulayer')
         self.components_decomposition_ = pd.DataFrame(comp_dec.get_weights()[0], index=pathways.index)
-
+        self.scaled_components_decomposition_ = (self.components_decomposition_-self.components_decomposition_.min())/\
+                                                (self.components_decomposition_.max()-
+                                                 self.components_decomposition_.min())
         return history
 
     # - - - - - - Build Encoder Model - - - - - -
