@@ -138,6 +138,17 @@ class autoPLIER:
         return X_tilde
 
 
+    def get_top_pathways(self, LVs, n_pathways):
+        pathwaydict = {}
+        for LV in LVs:
+            pathwaydict[LV] = self.components_decomposition_[LV].sort_values(ascending=False)[0:n_pathways]
+        return pathwaydict
+
+
+    def get_top_pathway_LVs(self, pathway, n_LVs):
+        LVs = self.components_decomposition_.T[pathway].sort_values(ascending=False)[0:n_LVs]
+        return LVs
+
 # epsilon sparsity function
 def sparsity_epsilon(z, epsilon):
     s = (np.sum((np.abs(z) < epsilon).astype(int)).sum()) / float(z.size)
@@ -187,13 +198,4 @@ def get_top_LVs(sample_df, n_LVs):
     return LV_dict
 
 
-def get_top_pathways(LVs, n_pathways):
-    pathwaydict = {}
-    for LV in LVs:
-        pathwaydict[LV] = autoPLIER.components_decomposition_[LV].sort_values(ascending = False)[0:n_pathways]
-    return pathwaydict
 
-
-def get_top_pathway_LVs(pathway, n_LVs):
-    LVs = autoPLIER.components_decomposition_.T[pathway].sort_values(ascending = False)[0:n_LVs]
-    return LVs
