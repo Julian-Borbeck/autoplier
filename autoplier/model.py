@@ -44,7 +44,8 @@ class autoPLIER:
 
         # define a dense single layer (Ulayer) with L1 regularization to encourage sparsity
         # ulayer = Dense(nz, kernel_regularizer=l1(regval), activation="relu", name="ulayer")
-        self.ulayer = Dense(self.n_components, kernel_regularizer=l1(self.regval), kernel_constraint=NonNeg(), name="ulayer")
+        self.ulayer = Dense(self.n_components, kernel_regularizer=l1(self.regval), kernel_constraint=NonNeg(),
+                            use_bias=False, name="ulayer")
 
         # foward pass the input through the ulayer
         self.encoder = self.ulayer(self.visible)
@@ -55,7 +56,7 @@ class autoPLIER:
         self.encoder = ReLU()(self.encoder)
 
         # The decoder does not have to be symmetric with encoder but let's have L1 reg anyway
-        self.decoder = Dense(self.n_inputs)(self.encoder)
+        self.decoder = Dense(self.n_inputs, kernel_constraint=NonNeg(), use_bias=False)(self.encoder)
 
         # Apply a ReLU type activation
         self.decoder = ReLU()(self.decoder)
@@ -175,3 +176,24 @@ def optimize_l1(target_sparsity, delta, start_l1, x_train, pathways, callbacks=[
                 step = step / 2
                 tuning_l1 = tuning_l1 * step
     return closest_l1
+
+
+def get_top_LVs(sample_df, n_LVs):
+    LV_dict = {}
+    for index, row in sample_df.iterrows():
+        sorted_samples = row.sort_values(ascending=False)[0:n_LVs]
+
+        LV_dict[index] = sorted_samples
+    return LV_dict
+
+
+def get_top_pathways(LVs, n_pathways):
+    pathwaydict = {}
+    for LV in LVs:
+        pathwaydict[LV] = autoPLIER.components_decomposition_[LV].sort_values(ascending = False)[0:n_pathways]
+    return pathwaydict
+
+
+def get_top_pathway_LVs(pathway, n_LVs):
+    LVs = autoPLIER.components_decomposition_.T[pathway].sort_values(ascending = False)[0:n_LVs]
+    return LVs
