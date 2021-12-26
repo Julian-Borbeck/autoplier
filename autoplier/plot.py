@@ -18,5 +18,5 @@ def plot_top_pathways(LVs, n_pathways, figure_size, model):
 
 def plot_top_pathway_LVs(pathway, n_LVs, figuresize, model):
     LVs = model.get_top_pathway_LVs(pathway, n_LVs)
-    LVs.plot.bar(figsize = figuresize)
-    return LVs
+    ax = LVs.plot.bar(figsize = figuresize)
+    return ax
