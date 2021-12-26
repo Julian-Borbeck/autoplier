@@ -17,27 +17,27 @@ Z = ap.fit_transform(X, pathways, maxepoch = 100, verbose = 0)
 
 def test_plot_topLVs():
     """
-    Tests the ability to plot the U matrix as a heatmap
+    Tests the ability to plot the 10 largest LVs in an input embedding dataframe
 
-    return: An Axes object from matplotlib
+    return: A rectilinear  object from matplotlib
     """
-    ax = plot_topLVs(X, n_LVs = 10, figure_size= (1,1))
-    assert ax.__class__.name == "AxesSubplot"
+    ax = plot_topLVs(Z, n_LVs = 10, figure_size= (1,1))
+    assert ax.__class__.name == "rectilinear"
 
 def test_plot_top_pathways():
     """
-    Tests the ability to plot the U matrix as a heatmap
+    Tests the ability to plot the top 10 largest weighted pathways in LV 0
 
-    return: An Axes object from matplotlib
+    return: A rectilinear  object from matplotlib
     """
     ax = plot_top_pathways([0], n_pathways = 10, figure_size = (1,1), model = ap)
-    assert ax.__class__.name == "AxesSubplot"
+    assert ax.__class__.name == "rectilinear"
 
 def test_plot_top_pathway_LVs():
     """
-    Tests the ability to plot the U matrix as a heatmap
+    Tests the ability to plot the top 10 LVs in which the pathway BIOCARTA_CB1R_PATHWAY is weighted largest
 
-    return: An Axes object from matplotlib
+    return: A rectilinear  object from matplotlib
     """
     ax = plot_top_pathway_LVs("BIOCARTA_CB1R_PATHWAY", n_LVs = 10, figuresize= (1,1), model= ap)
-    assert ax.__class__.name == "AxesSubplot"
+    assert ax.__class__.name == "rectilinear"
