@@ -45,7 +45,7 @@ class autoPLIER:
         # define a dense single layer (Ulayer) with L1 regularization to encourage sparsity
         # ulayer = Dense(nz, kernel_regularizer=l1(regval), activation="relu", name="ulayer")
         self.ulayer = Dense(self.n_components, kernel_regularizer=l1(self.regval), kernel_constraint=NonNeg(),
-                            use_bias=False, name="ulayer")
+                            name="ulayer")
 
         # foward pass the input through the ulayer
         self.encoder = self.ulayer(self.visible)
@@ -56,7 +56,7 @@ class autoPLIER:
         self.encoder = ReLU()(self.encoder)
 
         # The decoder does not have to be symmetric with encoder but let's have L1 reg anyway
-        self.decoder = Dense(self.n_inputs, kernel_constraint=NonNeg(), use_bias=False)(self.encoder)
+        self.decoder = Dense(self.n_inputs, kernel_constraint=NonNeg())(self.encoder)
 
         # Apply a ReLU type activation
         self.decoder = ReLU()(self.decoder)
@@ -92,7 +92,6 @@ class autoPLIER:
 
     # - - - - - - Build Encoder Model - - - - - -
     def build_encoder(self):
-
         # define an encoder model (without the decoder)
         self.final_encoder = Model(inputs=self.visible, outputs=self.encoder)
 
@@ -110,12 +109,11 @@ class autoPLIER:
     def fit_transform(self, x_train, pathways, callbacks=[], batch_size=None, maxepoch=2000, verbose=2, valfrac=.3):
         # fit the autoencoder model to reconstruct input
 
-        x_train_processed = self.preprocess(x_train, pathways, fit=True)
 
-        self.model.fit(x_train_processed, x_train_processed, epochs=maxepoch, batch_size=batch_size, verbose=verbose,
-                       validation_split=valfrac, callbacks=callbacks)
+        self.fit(x_train, pathways, maxepoch=maxepoch, batch_size=batch_size, verbose=verbose,
+                       valfrac=valfrac, callbacks=callbacks)
 
-        z_predicted = pd.DataFrame(self.final_encoder.predict(x_train_processed), index=x_train.index)
+        z_predicted = self.transform(x_train, pathways)
 
         return z_predicted
 
