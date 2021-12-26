@@ -1,14 +1,14 @@
 from autoplier.model import autoPLIER
 import pandas as pd
 import numpy as np
-
-# Grab the test data
-X = pd.read_csv("test_data/test_X.csv", sep = ",", index_col=0)
-pathways = pd.read_csv("test_data/test_pathways.csv", sep = ",", index_col=0)
-
+from pathlib import Path
 
 # TODO: Need to update tests with expected output (number of
 #  dimensions, expected values, etc).
+
+# Grab the test data
+X = pd.read_csv(Path(__file__).parent  /"test_data/test_X.csv", sep=",", index_col=0)
+pathways = pd.read_csv(Path(__file__).parent /"test_data/test_pathways.csv", sep=",", index_col=0)
 
 
 def test_embed_basic():
