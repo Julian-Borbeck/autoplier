@@ -1,4 +1,4 @@
-from packagename.plot import plot_components_decomposition
+from autoplier.plot import plot_components_decomposition
 from pickle import load
 
 # Test data load
