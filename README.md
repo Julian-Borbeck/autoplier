@@ -2,6 +2,7 @@
 Embed Omics data using an interpretable Tensorflow based model.
 
 ![Build Status](https://github.com/dmontemayor/autoplier/actions/workflows/build.yaml/badge.svg)
+![Coverage](https://codecov.io/gh/dmontemayor/autoplier/branch/main/graphs/badge.svg?branch=main)
 
 ## Overview
 This package contains a Tensorflow model built in spirit of the *PLIER* <sup>1</sup> approach to embed Omics data into a latent space representation.
