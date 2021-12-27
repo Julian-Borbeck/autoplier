@@ -34,6 +34,6 @@ jobs:
     - name: Test with coverage + pytest
       run: |
         python -m coverage run -m pytest
-        python -m coverage report --fail-under=90
+        python -m coverage report -i --fail-under=90
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
