@@ -2,6 +2,7 @@ from autoplier.model import autoPLIER
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import autoplier.model as mod
 
 # TODO: Need to update tests with expected output (number of
 #  dimensions, expected values, etc).
@@ -45,3 +46,64 @@ def test_get_u_matrix():
     ap.fit_transform(X, pathways, maxepoch = 100, verbose = 0)
     U = ap.components_decomposition_
     assert U.__class__.__name__ == "DataFrame"
+
+
+def test_get_top_LVs():
+    """
+    Tests the ability to return top 10 LVs
+
+    return: a dictionary
+    """
+    ap = autoPLIER(n_components=100)
+    ap.fit_transform(X, pathways, maxepoch = 100, verbose = 0)
+    top_LVs = mod.get_top_LVs()
+    assert top_LVs.__class__.__name__ == "dict"
+
+
+def test_set_seed():
+    """
+    Tests the ability to set seed
+    """
+    mod.set_seed_(111)
+
+def test_get_top_pathways():
+    """
+    Tests the ability to return the 10 largest pathways for LV 0
+
+    return: a dictionary
+    """
+    ap = autoPLIER(n_components=100)
+    ap.fit_transform(X, pathways, maxepoch=100, verbose=0)
+    top_pathways = ap.get_top_pathways([0], n_pathways = 10)
+    assert top_pathways.__class__.__name__ == "dict"
+
+def test_get_top_pathway_LVs():
+    """
+    Tests the ability to return the top 10 LVs in which the pathway BIOCARTA_CB1R_PATHWAY is weighted largest
+
+    return: a Pandas Series
+    """
+    ap = autoPLIER(n_components=100)
+    ap.fit_transform(X, pathways, maxepoch=100, verbose=0)
+    top_LVs = ap.get_top_pathway_LVs("BIOCARTA_CB1R_PATHWAY", n_LVs = 10)
+    assert top_LVs.__class__.__name__ == "Series"
+
+def test_epsilon_sparsity():
+    """
+    Tests the epsilon sparsity measure
+
+    return: a float
+    """
+    ap = autoPLIER(n_components=100)
+    Z = ap.fit_transform(X, pathways, maxepoch=100, verbose=0)
+    sparsity = mod.sparsity_epsilon(Z, 1.0E-4)
+    assert sparsity.__class__.__name__ == "float"
+
+def test_optimize_l1():
+    """
+    Tests the ability to automatically find an lv which leads to a specified sparsity
+
+    return: a float
+    """
+    closest_l1 = mod.optimize_l1(0.7, 0.4, 1.0E-10, X, pathways)
+    assert closest_l1.__class__.__name__ == "float"
