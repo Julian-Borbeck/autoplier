@@ -55,8 +55,8 @@ def test_get_top_LVs():
     return: a dictionary
     """
     ap = autoPLIER(n_components=100)
-    ap.fit_transform(X, pathways, maxepoch = 100, verbose = 0)
-    top_LVs = mod.get_top_LVs()
+    Z = ap.fit_transform(X, pathways, maxepoch = 100, verbose = 0)
+    top_LVs = mod.get_top_LVs(Z, n_LVs = 10)
     assert top_LVs.__class__.__name__ == "dict"
 
 
@@ -97,7 +97,7 @@ def test_epsilon_sparsity():
     ap = autoPLIER(n_components=100)
     Z = ap.fit_transform(X, pathways, maxepoch=100, verbose=0)
     sparsity = mod.sparsity_epsilon(Z, 1.0E-4)
-    assert sparsity.__class__.__name__ == "float"
+    assert sparsity.__class__.__name__ == "float64"
 
 def test_optimize_l1():
     """
