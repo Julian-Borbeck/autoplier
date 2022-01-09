@@ -20,7 +20,7 @@ def set_seed_(seed):
 
 class autoPLIER:
 
-    def __init__(self, n_components=100, regval=1.20E-7, learning_rate = 0.01):
+    def __init__(self, n_components=100, regval=1.20E-7, learning_rate = 0.0002):
 
         self.n_inputs = 2
 
@@ -154,7 +154,7 @@ def sparsity_epsilon(z, epsilon):
 
 
 def optimize_l1(target_sparsity, delta, start_l1, x_train, pathways, callbacks=[],
-                batch_size=None, maxepoch=2000, verbose=0, valfrac=.3, n_components=100, learning_rate = 0.01):
+                batch_size=None, maxepoch=2000, verbose=0, valfrac=.3, n_components=100, learning_rate = 0.0002):
     set_seed_(111)
     sparsity = 0
     tuning_l1 = start_l1
