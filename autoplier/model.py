@@ -154,7 +154,7 @@ def sparsity_epsilon(z, epsilon):
 
 
 def optimize_l1(target_sparsity, delta, start_l1, x_train, pathways, callbacks=[],
-                batch_size=None, maxepoch=2000, verbose=0, valfrac=.3):
+                batch_size=None, maxepoch=2000, verbose=0, valfrac=.3, n_components=100, learning_rate = 0.01):
     set_seed_(111)
     sparsity = 0
     tuning_l1 = start_l1
@@ -163,7 +163,7 @@ def optimize_l1(target_sparsity, delta, start_l1, x_train, pathways, callbacks=[
     closest_l1 = tuning_l1
     while abs(sparsity - target_sparsity) > delta:
 
-        mod = autoPLIER(100, regval=tuning_l1)
+        mod = autoPLIER(100, regval=tuning_l1, n_components=n_components, learning_rate = learning_rate)
         mod.fit(x_train, pathways, callbacks, batch_size=batch_size,
                 maxepoch=maxepoch, verbose=verbose, valfrac=valfrac)
         sparsity = sparsity_epsilon(mod.components_decomposition_, 10 ** -4)
