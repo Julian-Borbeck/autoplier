@@ -20,3 +20,7 @@ def plot_top_pathway_LVs(pathway, n_LVs, figuresize, model):
     LVs = model.get_top_pathway_LVs(pathway, n_LVs)
     ax = LVs.plot.bar(figsize = figuresize)
     return ax
+
+def plot_learning_curve(history):
+    plt.plot(history['loss'], label='loss_train')
+    plt.plot(history['val_loss'], label='loss_test')

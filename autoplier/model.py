@@ -119,19 +119,25 @@ class autoPLIER:
 
     def preprocess(self, X, pathways, fit):
 
+
         X = X[X.columns[X.columns.isin(pathways.columns)]]
         pathways = pathways[pathways.columns[pathways.columns.isin(X.columns)]]
 
         X_tilde = np.dot(X, pathways.T.to_numpy())
 
         if fit is True:
-            X_tilde = self.scaler.fit_transform(X_tilde)
+            if (self.scaler):
+                X_tilde = self.scaler.fit_transform(X_tilde)
             self.n_inputs = X_tilde.shape[1]
             self.build_model()
             self.scaler_is_fit = True
 
         else:
-            X_tilde = self.scaler.transform(X_tilde)
+            if (self.scaler):
+                X_tilde = self.scaler.transform(X_tilde)
+
+
+
 
         return X_tilde
 
