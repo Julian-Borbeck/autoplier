@@ -11,16 +11,18 @@ from tensorflow.keras.regularizers import l1
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping, LambdaCallback
 from sklearn import preprocessing
-
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score, average_precision_score
+from sklearn.model_selection import GridSearchCV
 
 def set_seed_(seed):
     np.random.seed(seed)  # numpy seed
     set_seed(seed)  # tensorflow seed
 
-
 class autoPLIER:
 
-    def __init__(self, n_components=100, regval=1.20E-7, learning_rate = 0.0002):
+    def __init__(self, n_components="estimate", regval=1.20E-7, learning_rate = 0.0002):
 
         self.n_inputs = 2
 
@@ -132,6 +134,9 @@ class autoPLIER:
             self.build_model()
             self.scaler_is_fit = True
 
+            if(self.n_components == "estimate"):
+                self.n_components = get_n_LVs(X_tilde, seed = 111, Pct_exp_var = 0.95, m = 5 )
+
         else:
             if (self.scaler):
                 X_tilde = self.scaler.transform(X_tilde)
@@ -158,6 +163,23 @@ def sparsity_epsilon(z, epsilon):
     s = (np.sum((np.abs(z) < epsilon).astype(int)).sum()) / float(z.size)
     return s
 
+# calculate number of LVs to use from inherent dimensionality of the data, calculated from the number of PCA
+# components that explain 95 percent variance
+def get_n_LVs(X_tilde, seed, Pct_exp_var = 0.95, m = 5 ):
+
+    pca = PCA(random_state=seed)  # do not define number of PCs
+
+    X_pca = pca.fit_transform(X_tilde)
+
+    totvar = sum(pca.explained_variance_)
+    cum_var = np.cumsum(pca.explained_variance_) / totvar
+
+    for i, val in enumerate(cum_var):
+
+        if (val >= Pct_exp_var):
+
+            return i * m
+    return 0
 
 def optimize_l1(target_sparsity, delta, start_l1, x_train, pathways, callbacks=[],
                 batch_size=None, maxepoch=2000, verbose=0, valfrac=.3, n_components=100, learning_rate = 0.0002):
@@ -169,7 +191,7 @@ def optimize_l1(target_sparsity, delta, start_l1, x_train, pathways, callbacks=[
     closest_l1 = tuning_l1
     while abs(sparsity - target_sparsity) > delta:
 
-        mod = autoPLIER(100, regval=tuning_l1, n_components=n_components, learning_rate = learning_rate)
+        mod = autoPLIER(regval=tuning_l1, n_components=n_components, learning_rate = learning_rate)
         mod.fit(x_train, pathways, callbacks, batch_size=batch_size,
                 maxepoch=maxepoch, verbose=verbose, valfrac=valfrac)
         sparsity = sparsity_epsilon(mod.components_decomposition_, 10 ** -4)
@@ -202,4 +224,52 @@ def get_top_LVs(sample_df, n_LVs):
     return LV_dict
 
 
+# fscore metric used to evaluate classifiers
+def fscore(p, r):
+    denom = p + r or 1
 
+    return 2*(p * r) / denom
+
+
+def train_classifiers(X_train, X_test, y_train, y_test):
+
+    PARAMETERS = {
+        'C': [
+            0.001,
+            0.01,
+            0.1,
+            1.0,
+            10.0,
+            100.0
+            ]
+        }
+    MAX_ITER = 200000
+
+    lr_model = LogisticRegression(penalty='l1', solver='liblinear')
+
+    clf = GridSearchCV(lr_model, PARAMETERS, scoring='f1')
+
+    clf.fit(X_train, y_train)
+
+    best_params = max(
+        zip(
+            clf.cv_results_['param_C'],
+            clf.cv_results_['mean_test_score']
+            ),
+        key=lambda x: x[1]
+    )
+    best_C = best_params[0]
+
+
+    lr_model = LogisticRegression(penalty='l1', solver='liblinear', C=best_C, max_iter=1000)
+    lr_model.fit(X_train, y_train)
+
+    target_pred = lr_model.predict(X_test)
+    target_probs = lr_model.predict_proba(X_test)[:, 1]
+    precision = precision_score(y_test, target_pred)
+    recall = recall_score(y_test, target_pred)
+    ap = average_precision_score(y_test, target_probs)
+    f = fscore(precision, recall)
+
+
+    return (f, ap)
