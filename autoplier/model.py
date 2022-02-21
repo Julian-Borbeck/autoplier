@@ -22,7 +22,7 @@ def set_seed_(seed):
 
 class autoPLIER:
 
-    def __init__(self, n_components="estimate", regval=1.20E-7, learning_rate = 0.0002):
+    def __init__(self, n_components="estimate", regval=1.20E-7, learning_rate = 0.0002, scaler = None):
 
         self.n_inputs = 2
 
@@ -30,7 +30,7 @@ class autoPLIER:
 
         self.regval = regval
 
-        self.scaler = preprocessing.StandardScaler()
+        self.scaler = scaler
 
         self.components_decomposition_ = None
 
