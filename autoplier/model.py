@@ -47,7 +47,7 @@ class autoPLIER:
         # define a dense single layer (Ulayer) with L1 regularization to encourage sparsity
         # ulayer = Dense(nz, kernel_regularizer=l1(regval), activation="relu", name="ulayer")
         self.ulayer = Dense(self.n_components, kernel_regularizer=l1(self.regval), kernel_constraint=NonNeg(),
-                            name="ulayer")
+                            use_bias=False, name="ulayer")
 
         # foward pass the input through the ulayer
         self.encoder = self.ulayer(self.visible)
@@ -58,7 +58,7 @@ class autoPLIER:
         self.encoder = ReLU()(self.encoder)
 
         # The decoder does not have to be symmetric with encoder but let's have L1 reg anyway
-        self.decoder = Dense(self.n_inputs, kernel_constraint=NonNeg())(self.encoder)
+        self.decoder = Dense(self.n_inputs, kernel_constraint=NonNeg(), use_bias=False)(self.encoder)
 
         # Apply a ReLU type activation
         self.decoder = ReLU()(self.decoder)
