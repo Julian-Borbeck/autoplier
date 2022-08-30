@@ -125,6 +125,8 @@ class autoPLIER:
         X = X[X.columns[X.columns.isin(pathways.columns)]]
         pathways = pathways[pathways.columns[pathways.columns.isin(X.columns)]]
 
+        pathways = pathways[X.columns]
+
         X_tilde = np.dot(X, pathways.T.to_numpy())
 
         if fit is True:
