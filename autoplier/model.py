@@ -1,4 +1,6 @@
+import os
 import pandas as pd
+import pickle
 import numpy as np
 
 from tensorflow.random import set_seed
@@ -275,3 +277,12 @@ def train_classifiers(X_train, X_test, y_train, y_test):
 
 
     return (f, ap)
+
+def save_model(path, model_name, model):
+    with open(os.join(path,model_name), 'wb') as pickle_file:
+        pickle.dump(model, pickle_file)
+
+def load_model(model_path):
+    with open(model_path, 'rb') as pickle_file:
+        AP_instance = pickle.load(pickle_file)
+    return AP_instance
