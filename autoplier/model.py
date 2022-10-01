@@ -278,9 +278,9 @@ def train_classifiers(X_train, X_test, y_train, y_test):
 
     return (f, ap)
 
-def save_model(path, model_name, model):
+def save_model(path, model_name, AP_instance):
     with open(os.join(path,model_name), 'wb') as pickle_file:
-        pickle.dump(model, pickle_file)
+        pickle.dump(AP_instance, pickle_file)
 
 def load_model(model_path):
     with open(model_path, 'rb') as pickle_file:
