@@ -110,7 +110,12 @@ class autoPLIER:
 
         return z_predicted
 
-    def fit_transform(self, x_train, pathways, callbacks=[], batch_size=None, maxepoch=2000, verbose=2, valfrac=.3):
+    def fit_transform(self, x_train, pathways, patience = 100, batch_size=None, maxepoch=2000, verbose=2, valfrac=.3):
+
+        if(patience != None):
+            callbacks = [EarlyStopping(patience = patience)]
+        else:
+            callbacks = []
         # fit the autoencoder model to reconstruct input
 
 
